@@ -9,13 +9,17 @@ will tell you something useful.
 
 
 Can get DDL for 
-- table
+- tables
 - indexes
 - sequences
 - functions
 - procedures
 - packages
 - types
+- triggers
+- database links
+- synonyms
+- views
 
 Works on
 - 9i
