@@ -5,20 +5,22 @@ import sys
 import re
 import ddlexceptions
 
+
 class DDLGenerator(object):
     # Class variables
-    # mapping of object types that show up in the user_objects view to the types used in dbms_metadata.get_ddl() function
+    # mapping of object types that show up in the user_objects view to the types used
+    # in dbms_metadata.get_ddl() function
     object_types = {
-            'DATABASE LINK': 'DB_LINK',
-            'FUNCTION': 'FUNCTION',
-            'INDEX':'INDEX',
-            'PACKAGE':'PACKAGE', 'PACKAGE BODY': 'PACKAGE', 'PROCEDURE':'PROCEDURE',
-            'SEQUENCE': 'SEQUENCE', 'SYNONYM':'SYNONYM',
-            'TABLE':'TABLE', 'TRIGGER':'TRIGGER', 'TYPE': 'TYPE',
-            'VIEW': 'VIEW',
+        'DATABASE LINK': 'DB_LINK',
+        'FUNCTION': 'FUNCTION',
+        'INDEX': 'INDEX',
+        'PACKAGE': 'PACKAGE', 'PACKAGE BODY': 'PACKAGE', 'PROCEDURE': 'PROCEDURE',
+        'SEQUENCE': 'SEQUENCE', 'SYNONYM': 'SYNONYM',
+        'TABLE': 'TABLE', 'TRIGGER': 'TRIGGER', 'TYPE': 'TYPE',
+        'VIEW': 'VIEW',
     }
     allowed_object_types = [
-        'DB_LINK','FUNCTION','INDEX','PACKAGE','PROCEDURE', 'SEQUENCE','SYNONYM','TABLE','TRIGGER','VIEW'
+        'DB_LINK', 'FUNCTION', 'INDEX', 'PACKAGE', 'PROCEDURE', 'SEQUENCE', 'SYNONYM', 'TABLE', 'TRIGGER', 'VIEW'
     ]
     # database function names
     grants_ddl_func = 'dbms_metadata.get_grant_ddl'
@@ -48,8 +50,8 @@ class DDLGenerator(object):
         self.pkgs = None
         self.object_names = {
             'TABLE': list(), 'VIEW': list(), 'PROCEDURE': list(),
-            'FUNCTION': list(),'TRIGGER': list(),'DB_LINK': list(),
-            'SEQUENCE': list(),'SYNONYM': list(),'INDEX': list(),
+            'FUNCTION': list(), 'TRIGGER': list(), 'DB_LINK': list(),
+            'SEQUENCE': list(), 'SYNONYM': list(), 'INDEX': list(),
             'PACKAGE': list(),
         }
         # This is used to index into the object_names dictionary
@@ -61,22 +63,22 @@ class DDLGenerator(object):
         # path to deposit ddl statement file when output type is 'per_object'
         self.output_path = None
 
-        self.validate_args(self.args)
+        self.dburl = self.validate_args(self.args)
 
     #-----------------------------------------
-
-    def write_ddl(self, obj_type, obj_name, schema, ddl_str, output_path):
+    @staticmethod
+    def write_ddl(obj_type, obj_name, schema, ddl_str, output_path):
         """
             Writes out the ddl string to a file
         """
+
         if output_path is not None:
-            if output_path is not None:
-                # build the filename out of the schema name, object_type, oject_name
-                fname = "%s_%s_%s.sql" % (schema, obj_type, obj_name)
-                print "Writing file %s" % fname
-                f = open(os.path.join(output_path, fname), 'w')
-                f.write(str(ddl_str))
-                f.close()
+            # build the filename out of the schema name, object_type, object_name
+            fname = "%s_%s_%s.sql" % (schema, obj_type, obj_name)
+            print "Writing file %s" % fname
+            f = open(os.path.join(output_path, fname), 'w')
+            f.write(str(ddl_str))
+            f.close()
 
     #-----------------------------------------
     def get_ddl(self, conn, schema_name):
@@ -92,17 +94,17 @@ class DDLGenerator(object):
             if 'ALL' in self.object_names[obj_type]:
                 # We're going to get all object of a certain type in the schema
                 # So get all object names for that object type. Skip any other names specified.
-                o_names = self.get_all_objects_of_type(conn,schema_name,obj_type)
+                o_names = self.get_all_objects_of_type(conn, schema_name, obj_type)
                 for o_name in o_names:
                     print "Processing %s %s.%s" % (obj_type.lower(), schema_name, o_name)
-                    ddl_str =  curs.callfunc(object_ddl_func, cx_Oracle.CLOB, (obj_type, o_name, schema_name))
+                    ddl_str = curs.callfunc(object_ddl_func, cx_Oracle.CLOB, (obj_type, o_name, schema_name))
                     self.write_ddl(obj_type, o_name, schema_name, ddl_str, self.output_path)
             else:
                 # Getting objects of a certain type having a name specified by the user
                 for obj_name in self.object_names[obj_type]:
                     print "Processing %s %s.%s" % (obj_type.lower(), schema_name, obj_name)
-                    ddl_str =  curs.callfunc(object_ddl_func, cx_Oracle.CLOB, (obj_type, obj_name, schema_name))
-                    self.write_ddl(obj_type,obj_name, schema_name, ddl_str, self.output_path)
+                    ddl_str = curs.callfunc(object_ddl_func, cx_Oracle.CLOB, (obj_type, obj_name, schema_name))
+                    self.write_ddl(obj_type, obj_name, schema_name, ddl_str, self.output_path)
         curs.close()
 
     #-----------------------------------------
@@ -122,12 +124,11 @@ class DDLGenerator(object):
             db_obj_type = "DATABASE LINK"
         else:
             db_obj_type = obj_type
-        curs2.execute(sql,{'obj_type': db_obj_type})
+        curs2.execute(sql, {'obj_type': db_obj_type})
         for row in curs2:
             names.append(row[0])
         curs2.close()
         return names
-
 
     #-----------------------------------------
     def validate_args(self, args):
@@ -138,12 +139,12 @@ class DDLGenerator(object):
             self.show_supported_objects()
             sys.exit(0)
     
-        self.check_object_args(args,self.object_types_to_fetch, self.object_names)
+        self.check_object_args(args, self.object_types_to_fetch, self.object_names)
 
         self.schema = args.dburl.split("/")[0]
 
         self.validate_file_option(args)
-        self.check_db_url(args)
+        return self.check_db_url(args)
 
     #-----------------------------------------
     def objects_are_none(self, args_object):
@@ -168,7 +169,7 @@ class DDLGenerator(object):
         return False
 
     #-----------------------------------------
-    def set_object_types(self,args_object, object_types_to_fetch, object_names):
+    def set_object_types(self, args_object, object_types_to_fetch, object_names):
                     # Collect the types and names of objects the user wants ddl for
             if args_object.tables is not None:
                 object_names['TABLE'] = args_object.tables.upper().split(",")
@@ -210,10 +211,9 @@ class DDLGenerator(object):
         if self.objects_are_none(args_object):
             raise ValueError("No database object types specified")
         else:
-            self.set_object_types(args_object,object_types_to_fetch, object_names)
+            self.set_object_types(args_object, object_types_to_fetch, object_names)
 
         print "Getting database objects that are %s" % ",".join(object_types_to_fetch)
-
 
     #-----------------------------------------
     def validate_file_option(self, args):
@@ -248,12 +248,12 @@ class DDLGenerator(object):
         # see if the dburl is in the proper format
         url_matcher = re.compile('.+/.+@.+')
         if url_matcher.match(args_object.dburl) is None:
-            raise ddlexceptions.BadDbUrlFormatError("DB URL is not in proper format. Should be: 'username/password@dnalias'")
+            raise ddlexceptions.BadDbUrlFormatError(
+                "DB URL is not in proper format. Should be: 'username/password@dnalias'"
+            )
 
         self.test_db_connection(args_object.dburl)
-        self.dburl = args_object.dburl
-
-        print "Database connection set"
+        return args_object.dburl
 
     #-----------------------------------------
     def test_db_connection(self, url):
@@ -264,14 +264,16 @@ class DDLGenerator(object):
             conn = cx_Oracle.connect(url)
         except cx_Oracle.DatabaseError as dbe:
             err, = dbe.args
-            if err.code == 12154:  #bad db alias
+
+            if err.code == 12154:  # bad db alias
                 raise ddlexceptions.BadDbAliasError("Invalid TNS alias. check your tnsnames.ora")
-            elif err.code == 1017: # bad username/password
+            elif err.code == 1017:  # bad username/password
                 raise ddlexceptions.BadDbUserCredsError("Invalid Username or Password")
             else:
                 raise
         else:
             self.conn = conn
+
 
 #-----------------------------------------
 #!!!!!! Not part of the above class !!!!!!
@@ -306,20 +308,15 @@ def get_command_line_args():
     args = parser.parse_args()
     return args
 
+
 #-----------------------------------------
-def main(arglist):
+def main():
 
     ddlg = DDLGenerator(get_command_line_args())
     ddlg.get_ddl(ddlg.conn, ddlg.schema.upper())
     return 0
+
+
 #-----------------------------------------
-
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
-
-
-
-
-
-
-
+    sys.exit(main())
