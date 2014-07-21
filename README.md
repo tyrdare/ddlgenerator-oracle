@@ -14,7 +14,7 @@ Oracle client libraries installation
 
 
 TODO:
-
-Add an "all" modifier on object options
-Add a "get everything at once" option.
-Allow concurrent processes for large schemas.  dbms_metadata.get_ddl is not the fastest thing in the world...
+=====
+-Add an "all" modifier on object options
+-Add a "get everything at once" option.
+-Allow concurrent processes for large schemas.  dbms_metadata.get_ddl is not the fastest thing in the world...
