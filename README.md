@@ -7,6 +7,22 @@ Oracle ddl generator - puts a python command line on the dbms_metadata.get_ddl f
 
 will tell you something useful.
 
+
+Can get DDL for 
+- table
+- indexes
+- sequences
+- functions
+- procedures
+- packages
+- types
+
+Works on
+- 9i
+- 10g
+- 11g
+- maybe 12c (not tested)
+
 Dependencies:
 ============
 cx_Oracle
